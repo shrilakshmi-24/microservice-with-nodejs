@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:5
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    restart: always
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/User"   # IMPORTANT
+
+  task-service:
+    build: ./task-service
+    container_name: task-service
+    restart: always
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      MONGO_URI: "mongodb://mongo:27017/Task"   # IMPORTANT
+
+  notifiation-service:
+    build: ./notifiation-service
+    container_name: notifiation-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - rabbitmq
+      - mongo
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  mongo-data:
